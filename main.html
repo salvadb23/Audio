@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    <h1>Audio Visualization</h1>
+    <canvas id="canvas" width="300" height="300"></canvas>
+    <button id="button-play">Play 🎸</button>
+</body>
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    button {
+        font-size: 20px;
+        border: 3px solid papayawhip;
+        padding: 10px;
+        border-radius: 20px;
+        color: black;
+        background-color: papayawhip;
+    }
+    canvas {
+        margin: 20px;
+        border-radius: 20px;
+        background-color: black;
+    }
+</style>
+<script>
+    let analyzer
+    let frequencyArray
+    const canvas = document.getElementById('canvas')
+    const ctx = canvas.getContext('2d')
+
+    const centerX = 300 / 2
+    const centerY = 300 / 2
+    const radius = 300 / 5
+
+    function render() {
+        ctx.clearRect(0, 0, 300, 300)
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
+        ctx.strokeStyle = 'red'
+        ctx.stroke()
+
+        const bars = 200
+        const step = Math.PI * 2 / bars
+
+        analyser.getByteFrequencyData(frequencyArray)
+
+        // --------------------------------------------
+        frequencyArray.forEach((f, i) => {
+            const barLength = frequencyArray[i] * 0.5
+            const x1 = (Math.cos(step * i) * radius) + centerX
+            const y1 = (Math.sin(step * i) * radius) + centerY
+            const x2 = (Math.cos(step * i) * (radius + barLength)) + centerX
+            const y2 = (Math.sin(step * i) * (radius + barLength)) + centerY
+
+            ctx.moveTo(x1, y1)
+            ctx.lineTo(x2, y2)
+            ctx.strokeStyle = "papayawhip"
+            ctx.stroke()
+        })
+
+        
+        // -------------------------------------------------
+
+        requestAnimationFrame(render)
+    }
+
+    function startAudio() {
+        const audio = new Audio()
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        audio.src = 'bird-whistling-a.wav'
+
+        // --------------------------------------------------------
+        analyser = audioContext.createAnalyser()
+        const source = audioContext.createMediaElementSource(audio)
+        source.connect(analyser)
+        analyser.connect(audioContext.destination)
+        frequencyArray = new Uint8Array(analyser.frequencyBinCount)
+        // --------------------------------------------------------
+
+        audio.play()
+    }
+    const playButton = document.getElementById('button-play')
+
+    playButton.addEventListener('click', (e) => {
+        startAudio()
+        render()
+    })
+</script>
+</html>
